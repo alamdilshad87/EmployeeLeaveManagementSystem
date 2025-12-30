@@ -53,6 +53,43 @@ namespace EmployeeLeaveManagementSystem.Controllers
 
             return Ok("Leave applied successfully");
         }
+
+        [HttpGet("manager/pending")]
+        public IActionResult ManagerPendingLeaves()
+        {
+            return Ok(_context.LeaveRequests
+                .Where(l => l.Status == "Pending" && !l.IsDeleted)
+                .ToList());
+        }
+
+        [HttpGet("hr/all")]
+        public IActionResult HrAllLeaves()
+        {
+            return Ok(_context.LeaveRequests
+                .Where(l => !l.IsDeleted)
+                .ToList());
+        }
+
+        [HttpGet("filter")]
+        public IActionResult FilterLeaves(
+            int? employeeId,
+            string? status,
+            DateTime? from,
+            DateTime? to)
+        {
+            var query = _context.LeaveRequests.AsQueryable();
+
+            if (employeeId.HasValue)
+                query = query.Where(l => l.EmployeeId == employeeId);
+
+            if (!string.IsNullOrEmpty(status))
+                query = query.Where(l => l.Status == status);
+
+            if (from.HasValue && to.HasValue)
+                query = query.Where(l => l.FromDate >= from && l.ToDate <= to);
+
+            return Ok(query.ToList());
+        }
     }
 }
 

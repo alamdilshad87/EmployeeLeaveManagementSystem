@@ -19,12 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="Report\" />
     <Folder Include="Services\" />
     <Folder Include="Repositories\" />
-    <Folder Include="DTOs\" />
-    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>
