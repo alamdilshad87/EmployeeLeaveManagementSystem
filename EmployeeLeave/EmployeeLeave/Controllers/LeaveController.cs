@@ -107,5 +107,22 @@ namespace EmployeeLeaveManagementSystem.Controllers
 
             return Ok("Leave updated");
         }
+        [HttpDelete("cancel/{id}")]
+        public IActionResult CancelLeave(int id)
+        {
+            var leave = _context.LeaveRequests.Find(id);
+
+            if (leave == null)
+                return NotFound();
+
+            if (leave.Status != "Pending")
+                return BadRequest("Only pending leaves can be cancelled");
+
+            leave.Status = "Cancelled";
+            leave.IsDeleted = true;
+
+            _context.SaveChanges();
+            return Ok("Leave cancelled");
+        }
     }
 }
