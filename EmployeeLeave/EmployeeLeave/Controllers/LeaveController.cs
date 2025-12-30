@@ -1,9 +1,11 @@
-﻿using EmployeeLeave.Models;
+﻿using EmployeeLeave.Data;
 using EmployeeLeave.DTOs;
-using EmployeeLeave.Data;
+using EmployeeLeave.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
-namespace EmployeeLeaveManagementSystem.Controllers
+namespace EmployeeLeave.Controllers
 {
     [ApiController]
     [Route("api/leave")]
@@ -34,6 +36,15 @@ namespace EmployeeLeaveManagementSystem.Controllers
                 l.Status != "Cancelled" &&
                 dto.FromDate <= l.ToDate &&
                 dto.ToDate >= l.FromDate);
+
+            bool alreadyOnLeave = _context.LeaveRequests.Any(l =>
+                l.EmployeeId == dto.EmployeeId &&
+                l.Status == "Approved" &&
+                DateTime.Now >= l.FromDate &&
+                DateTime.Now <= l.ToDate);
+
+            if (alreadyOnLeave)
+                return BadRequest("Employee is already on leave");
 
             if (overlap)
                 return BadRequest("Overlapping leave not allowed");
@@ -124,5 +135,37 @@ namespace EmployeeLeaveManagementSystem.Controllers
             _context.SaveChanges();
             return Ok("Leave cancelled");
         }
+
+
+        [HttpGet("report/total-leaves")]
+        public IActionResult TotalLeavesPerEmployee()
+        {
+            var result = _context.Employees
+                .Select(e => new
+                {
+                    EmployeeId = e.EmployeeId,
+                    TotalLeaves = _context.LeaveRequests
+                        .Count(l => l.EmployeeId == e.EmployeeId && l.Status == "Approved")
+                })
+                .ToList();
+
+            return Ok(result);
+        }
+
+
+        [HttpGet("report/status-summary")]
+        public IActionResult LeaveStatusSummary()
+        {
+            var report = _context.LeaveRequests
+                .GroupBy(l => l.Status)
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                });
+
+            return Ok(report);
+        }
     }
 }
+
